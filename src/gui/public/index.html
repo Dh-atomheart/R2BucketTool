@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>R2 Bucket Tool GUI</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="shell">
+      <header class="hero">
+        <div>
+          <p class="eyebrow">Local Control Panel</p>
+          <h1>R2 Bucket Tool</h1>
+          <p class="lede">
+            Compress a folder, inspect the result, upload to R2, and copy Cloudflare image delivery code without
+            touching the command line.
+          </p>
+        </div>
+        <div class="status-card">
+          <span class="status-label">Current status</span>
+          <strong id="global-status">Idle</strong>
+          <p id="global-detail">No active job.</p>
+        </div>
+      </header>
+
+      <main class="grid">
+        <section class="panel">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">01</p>
+              <h2>Configuration</h2>
+            </div>
+            <button id="reload-config" class="ghost-button" type="button">Reload</button>
+          </div>
+
+          <p class="muted" id="config-warning"></p>
+
+          <form id="config-form" class="form-grid">
+            <label>
+              <span>Account ID</span>
+              <input id="R2_ACCOUNT_ID" name="R2_ACCOUNT_ID" type="text" autocomplete="off" />
+            </label>
+            <label>
+              <span>Bucket</span>
+              <input id="R2_BUCKET" name="R2_BUCKET" type="text" autocomplete="off" />
+            </label>
+            <label>
+              <span>Public base URL</span>
+              <input id="R2_PUBLIC_BASE_URL" name="R2_PUBLIC_BASE_URL" type="url" autocomplete="off" />
+            </label>
+            <label>
+              <span>Key prefix</span>
+              <input id="R2_KEY_PREFIX" name="R2_KEY_PREFIX" type="text" autocomplete="off" />
+            </label>
+            <label>
+              <span>Cache-Control</span>
+              <input id="R2_CACHE_CONTROL" name="R2_CACHE_CONTROL" type="text" autocomplete="off" />
+            </label>
+            <label>
+              <span>Access key ID</span>
+              <input id="R2_ACCESS_KEY_ID" name="R2_ACCESS_KEY_ID" type="password" placeholder="Leave blank to keep saved value" />
+            </label>
+            <label>
+              <span>Secret access key</span>
+              <input
+                id="R2_SECRET_ACCESS_KEY"
+                name="R2_SECRET_ACCESS_KEY"
+                type="password"
+                placeholder="Leave blank to keep saved value"
+              />
+            </label>
+          </form>
+
+          <div class="meta-row">
+            <div id="config-health" class="tag-row"></div>
+            <button id="save-config" class="primary-button" type="button">Save configuration</button>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">02</p>
+              <h2>Import and Compress</h2>
+            </div>
+          </div>
+
+          <div class="stats-strip">
+            <div>
+              <span>Long edge</span>
+              <strong>3200px</strong>
+            </div>
+            <div>
+              <span>Photo format</span>
+              <strong id="photo-format-chip">JPEG</strong>
+            </div>
+            <div>
+              <span>Photo quality</span>
+              <strong id="photo-quality-chip">88</strong>
+            </div>
+          </div>
+
+          <div class="compression-controls">
+            <label>
+              <span>Photo output format</span>
+              <select id="photo-format">
+                <option value="jpeg" selected>JPEG</option>
+                <option value="webp">WebP</option>
+              </select>
+              <small>WebP usually gets smaller files than JPEG at similar visual quality.</small>
+            </label>
+
+            <label>
+              <span>Compression strength</span>
+              <input id="photo-quality" type="range" min="40" max="88" step="1" value="88" />
+              <small id="photo-quality-help">Higher value = better quality, lower compression.</small>
+            </label>
+          </div>
+
+          <label class="folder-drop">
+            <input id="folder-input" type="file" webkitdirectory directory multiple />
+            <span>Select a folder of images</span>
+            <small id="folder-meta">No folder selected.</small>
+          </label>
+
+          <div class="meta-row">
+            <div id="job-actions" class="tag-row"></div>
+            <button id="start-job" class="primary-button" type="button">Start compression</button>
+          </div>
+        </section>
+
+        <section class="panel panel-wide">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">03</p>
+              <h2>Results</h2>
+            </div>
+            <div class="export-links">
+              <button id="cleanup-job" class="ghost-button" type="button">Clean temp files</button>
+              <a id="optimized-archive-link" class="ghost-link disabled-link" href="#" download>Download ZIP</a>
+              <a id="manifest-link" class="ghost-link disabled-link" href="#" download>Manifest</a>
+              <a id="uploaded-manifest-link" class="ghost-link disabled-link" href="#" download>Uploaded manifest</a>
+            </div>
+          </div>
+
+          <div id="summary-cards" class="summary-grid">
+            <article class="summary-card">
+              <span>Files</span>
+              <strong id="summary-files">0</strong>
+            </article>
+            <article class="summary-card">
+              <span>Original</span>
+              <strong id="summary-original">0 B</strong>
+            </article>
+            <article class="summary-card">
+              <span>Optimized</span>
+              <strong id="summary-optimized">0 B</strong>
+            </article>
+            <article class="summary-card">
+              <span>Saved</span>
+              <strong id="summary-saved">0%</strong>
+            </article>
+          </div>
+
+          <div class="table-shell">
+            <table>
+              <thead>
+                <tr>
+                  <th>File</th>
+                  <th>Strategy</th>
+                  <th>Dimensions</th>
+                  <th>Original</th>
+                  <th>Optimized</th>
+                  <th>Saved</th>
+                  <th>Object key</th>
+                </tr>
+              </thead>
+              <tbody id="results-body">
+                <tr>
+                  <td colspan="7" class="empty-cell">No results yet.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="preview-grid">
+            <article class="preview-card">
+              <div class="preview-head">
+                <h3>Original</h3>
+                <span id="original-caption" class="muted">Select an item</span>
+              </div>
+              <img id="original-preview" alt="" />
+            </article>
+            <article class="preview-card">
+              <div class="preview-head">
+                <h3>Optimized</h3>
+                <span id="optimized-caption" class="muted">Select an item</span>
+              </div>
+              <img id="optimized-preview" alt="" />
+            </article>
+          </div>
+        </section>
+
+        <section class="panel panel-wide">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">04</p>
+              <h2>Publish</h2>
+            </div>
+            <button id="upload-job" class="primary-button" type="button">Upload to R2</button>
+          </div>
+
+          <div id="delivery-state" class="tag-row"></div>
+
+          <div class="preset-switcher" id="preset-switcher">
+            <button type="button" data-preset="thumb" class="preset-pill active">thumb</button>
+            <button type="button" data-preset="card" class="preset-pill">card</button>
+            <button type="button" data-preset="hero" class="preset-pill">hero</button>
+          </div>
+
+          <div id="delivery-empty" class="empty-state">
+            Select a processed item to inspect URLs and HTML output.
+          </div>
+
+          <div id="delivery-panel" class="delivery-panel hidden">
+            <div class="field-list">
+              <div class="field-card">
+                <div class="field-head">
+                  <span>Source URL</span>
+                  <button data-copy="sourceUrl" class="ghost-button" type="button">Copy</button>
+                </div>
+                <code id="sourceUrl"></code>
+              </div>
+              <div class="field-card">
+                <div class="field-head">
+                  <span>Transform template</span>
+                  <button data-copy="transformTemplate" class="ghost-button" type="button">Copy</button>
+                </div>
+                <code id="transformTemplate"></code>
+              </div>
+              <div class="field-card">
+                <div class="field-head">
+                  <span>src</span>
+                  <button data-copy="src" class="ghost-button" type="button">Copy</button>
+                </div>
+                <code id="src"></code>
+              </div>
+              <div class="field-card">
+                <div class="field-head">
+                  <span>srcset</span>
+                  <button data-copy="srcset" class="ghost-button" type="button">Copy</button>
+                </div>
+                <code id="srcset"></code>
+              </div>
+              <div class="field-card field-card-wide">
+                <div class="field-head">
+                  <span>Recommended HTML</span>
+                  <button data-copy="html" class="ghost-button" type="button">Copy</button>
+                </div>
+                <pre id="html"></pre>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <template id="result-row-template">
+      <tr>
+        <td class="file-cell"></td>
+        <td class="strategy-cell"></td>
+        <td class="dimension-cell"></td>
+        <td class="original-cell"></td>
+        <td class="optimized-cell"></td>
+        <td class="saved-cell"></td>
+        <td class="key-cell"></td>
+      </tr>
+    </template>
+
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>

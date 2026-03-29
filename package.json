@@ -1,0 +1,22 @@
+{
+  "name": "r2-bucket-tool",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Offline image normalization and R2 upload toolkit for Cloudflare Image Transform.",
+  "type": "module",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "optimize": "node src/cli/optimize.js",
+    "upload:r2": "node src/cli/upload-r2.js",
+    "gui": "node src/gui/server.js",
+    "test": "node test/cloudflare-images.test.js && node test/slug.test.js && node test/gui-config.test.js && node test/gui-job-manager.test.js && node test/gui-server.test.js"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.750.0",
+    "archiver": "^7.0.1",
+    "busboy": "^1.6.0",
+    "sharp": "^0.34.0"
+  }
+}
