@@ -2,7 +2,27 @@
   "name": "r2-bucket-tool",
   "version": "0.1.0",
   "private": true,
-  "description": "Offline image normalization and R2 upload toolkit for Cloudflare Image Transform.",
+  "description": "Local image optimization, preview, and Cloudflare R2 upload toolkit with GUI and CLI.",
+  "author": "Dh-atomheart",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Dh-atomheart/R2BucketTool.git"
+  },
+  "homepage": "https://github.com/Dh-atomheart/R2BucketTool#readme",
+  "bugs": {
+    "url": "https://github.com/Dh-atomheart/R2BucketTool/issues"
+  },
+  "keywords": [
+    "cloudflare",
+    "cloudflare-r2",
+    "image-compression",
+    "image-optimization",
+    "image-transform",
+    "r2",
+    "sharp",
+    "web-gui"
+  ],
   "type": "module",
   "engines": {
     "node": ">=22.12.0"
